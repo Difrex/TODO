@@ -27,6 +27,11 @@ if ( $opt_T and $opt_n and !($opt_t) ) {
     # Create new task
     $store->new_task($opt_T);
 }
+elsif ($opt_l) {
+
+    # List tasks
+    $store->list($opt_l);
+}
 else {
     $usage->show();
 }

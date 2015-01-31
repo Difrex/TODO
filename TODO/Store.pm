@@ -3,9 +3,10 @@ package TODO::Store;
 use Storable;
 use Term::ANSIColor;
 
+use TODO::Usage;
+
 use strict;
 use warnings;
-use utf8;
 
 use Data::Dumper;
 
@@ -45,7 +46,7 @@ sub new_task {
     if ( -e $parent_file ) {
         my $tasks = retrieve($parent_file);
         my %h     = %$tasks;
-        $h{$rand_hash} = {
+        $h{ time() } = {
             'title'       => "$title",
             'description' => "$description",
             'state'       => 'uncomplete',
@@ -56,7 +57,7 @@ sub new_task {
     }
     else {
         my %tasks = (
-            $rand_hash => {
+            time() => {
                 'title'       => "$title",
                 'description' => "$description",
                 'state'       => 'uncomplete',
@@ -67,19 +68,43 @@ sub new_task {
         store( \%tasks, $parent_file );
     }
 
-    my $tasks = retrieve($parent_file);
-    print Dumper($tasks);
-
-    print "Task "
-        . colored( 'cyan', $title )
-        . " was saved with "
-        . colored( 'yellow', 'uncomplete' )
-        . " state.";
+    print "Task '" . colored( "$title", 'cyan' ) . "' was stored.\n";
 }
 
 # List tasks
 sub list {
-	my ($self, $) = @_;
+    my ( $self, $list ) = @_;
+    my $parent_file = $self->{_parent};
+    my $child_file  = $self->{_child};
+    my $parents     = retrieve($parent_file);
+    my $childs      = '';
+    if ( -e $child_file ) {
+        $childs = retrieve($child_file);
+    }
+
+	my $formated;
+    if ( $list eq 'tasks' ) {
+        foreach my $unixt ( reverse sort keys( %{$parents} ) ) {
+            my $loct = localtime($unixt);
+            $formated
+                .= colored( '*', 'yellow' ) . " "
+                . colored( $loct,                       'green' ) . ' '
+                . colored( $parents->{$unixt}->{title}, 'cyan' ) . "\n|\n";
+        }
+        chomp($formated);
+        chop($formated);
+        print $formated;
+    }
+    elsif ( $list eq 'all' ) {
+
+    }
+    elsif ( $list =~ /^.{8}$/ ) {
+
+    }
+    else {
+        TODO::Usage->show();
+    }
+
 }
 
 # Create new subtask
@@ -87,9 +112,38 @@ sub new_subtask {
 
 }
 
+# Sort
+sub sort_tasks {
+    my ( $self, $tasks, $type ) = @_;
+
+    # Sort tasks
+    my $sorted;
+    if ( $type eq 'tasks' ) {
+        foreach my $unixt ( sort keys( %{ $tasks->{parents} } ) ) {
+            print $unixt. "\n";
+            push(
+                @$sorted,
+                {   time  => localtime($unixt),
+                    title => $tasks->{parents}->{title}
+                }
+            );
+        }
+    }
+    elsif ( $type eq 'all' ) {
+
+    }
+    elsif ( $type =~ /^.{8}$/ ) {
+
+    }
+    else {
+        TODO::Usage->show();
+    }
+
+}
+
 # Generate random hash
 sub gen_hash {
-    my @chars = ( "A" .. "Z", "a" .. "z", 0 .. 9, '.' );
+    my @chars = ( "A" .. "Z", "a" .. "z", 0 .. 9 );
     my $string;
     $string .= $chars[ rand @chars ] for 1 .. 8;
 
