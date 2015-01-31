@@ -1,15 +1,32 @@
 #!/usr/bin/perl 
 
 use Getopt::Std;
-use Term::ANSIColor;
 
 use TODO::Store;
+use TODO::Usage;
 
-sub check_folders {
-    if ( !( -d $ENV{HOME} . "/.local/share/todo/" ) ) {
-        my @mkdir_cmd = ( 'mkdir', '-p', $ENV{HOME} . "/.local/share/todo/" );
-        system(@mkdir_cmd) == 0 or die "Cannot create dir: $!\n";
-    }
+use Data::Dumper;
+
+my $store = TODO::Store->new();
+my $usage = TODO::Usage->new();
+
+# Otions parsing
+sub init() {
+    my $opt_string = 'T:ndt:l:h';
+    getopts("$opt_string") or $usage->show();
+    our ( $opt_T, $opt_t, $opt_n, $opt_d, $opt_l, $opt_h );
+
+    $usage->show() if $opt_h;
 }
 
-check_folders()
+init();
+
+# Option switch
+if ( $opt_T and $opt_n and !($opt_t) ) {
+
+    # Create new task
+    $store->new_task($opt_T);
+}
+else {
+    $usage->show();
+}
