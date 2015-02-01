@@ -14,6 +14,7 @@ sub new {
     my $class = shift;
 
     TODO::Store->check_folders();
+    TODO::Store->check_files();
 
     my $self = {
         _parent => $ENV{HOME} . "/.local/share/todo/parent.dat",
@@ -22,14 +23,6 @@ sub new {
 
     bless $self, $class;
     return $self;
-}
-
-# Check storables folder
-sub check_folders {
-    if ( !( -d $ENV{HOME} . "/.local/share/todo/" ) ) {
-        my @mkdir_cmd = ( 'mkdir', '-p', $ENV{HOME} . "/.local/share/todo/" );
-        system(@mkdir_cmd) == 0 or die "Cannot create dir: $!\n";
-    }
 }
 
 # Create new task
@@ -77,18 +70,17 @@ sub list {
     my $parent_file = $self->{_parent};
     my $child_file  = $self->{_child};
     my $parents     = retrieve($parent_file);
-    my $childs      = '';
+    my $childs      = {};
     if ( -e $child_file ) {
         $childs = retrieve($child_file);
     }
 
-	my $formated;
+    my $formated = '';
     if ( $list eq 'tasks' ) {
         foreach my $unixt ( reverse sort keys( %{$parents} ) ) {
-            my $loct = localtime($unixt);
             $formated
-                .= colored( '*', 'yellow' ) . " "
-                . colored( $loct,                       'green' ) . ' '
+                .= colored( '*', 'yellow' ) . "—"
+                . colored( "$unixt",                    'green' ) . ' '
                 . colored( $parents->{$unixt}->{title}, 'cyan' ) . "\n|\n";
         }
         chomp($formated);
@@ -98,7 +90,7 @@ sub list {
     elsif ( $list eq 'all' ) {
 
     }
-    elsif ( $list =~ /^.{8}$/ ) {
+    elsif ( $list =~ /^\d{10}$/ ) {
 
     }
     else {
@@ -109,36 +101,8 @@ sub list {
 
 # Create new subtask
 sub new_subtask {
-
-}
-
-# Sort
-sub sort_tasks {
-    my ( $self, $tasks, $type ) = @_;
-
-    # Sort tasks
-    my $sorted;
-    if ( $type eq 'tasks' ) {
-        foreach my $unixt ( sort keys( %{ $tasks->{parents} } ) ) {
-            print $unixt. "\n";
-            push(
-                @$sorted,
-                {   time  => localtime($unixt),
-                    title => $tasks->{parents}->{title}
-                }
-            );
-        }
-    }
-    elsif ( $type eq 'all' ) {
-
-    }
-    elsif ( $type =~ /^.{8}$/ ) {
-
-    }
-    else {
-        TODO::Usage->show();
-    }
-
+    my ($self) = @_;
+    
 }
 
 # Generate random hash
@@ -149,5 +113,29 @@ sub gen_hash {
 
     return $string;
 }
+
+# Check storables folder
+sub check_folders {
+    if ( !( -d $ENV{HOME} . "/.local/share/todo/" ) ) {
+        my @mkdir_cmd = ( 'mkdir', '-p', $ENV{HOME} . "/.local/share/todo/" );
+        system(@mkdir_cmd) == 0 or die "Cannot create dir: $!\n";
+    }
+}
+
+# Check storable files
+sub check_files {
+    my $parent_file = $ENV{HOME} . "/.local/share/todo/parent.dat";
+    my $child_file = $ENV{HOME} . "/.local/share/todo/child.dat";
+
+    my %stor = ();
+	if ( !(-e $parent_file)) {
+        store(\%stor, $parent_file);
+	}
+	
+	if (!(-e $child_file )) {
+		store(\%stor, $child_file)
+	}
+}
+
 
 1;
