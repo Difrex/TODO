@@ -89,28 +89,42 @@ sub list {
         chop($formated);
         print $formated;
     }
+
+    # Show all parents and childrens
     elsif ( $list eq 'all' ) {
-        foreach my $unixt ( reverse sort keys( %{$parents} ) ) {
+        my $pc = 1;
+        foreach my $unixt ( sort keys( %{$parents} ) ) {
             $formated
-                .= colored( '*', 'yellow' ) . "—"
-                . colored( "$unixt",                    'green' ) . ' '
-                . colored( $parents->{$unixt}->{title}, 'cyan' ) . "\n|\n";
-            if ( $parents->{$unixt}->{childs} ) {
+                .= colored( "$pc.", 'yellow' ) . " "
+                . colored( "$unixt", 'grey16' ) . ' '
+                . colored( $parents->{$unixt}->{title},
+                'bold white underscore' )
+                . "\n|\n";
+            if ( $parents->{$unixt}->{childs}[0] ) {
                 chomp($formated);
                 chop($formated);
+                my $cc = 0;
+                my @cw = ( 'a' .. 'z' );
+                $formated .= " \\\n";
                 foreach my $hash ( $parents->{$unixt}->{childs} ) {
                     foreach my $x (@$hash) {
-                        # body...
+
                         $formated
                             .= "  "
-                            . colored( '*',   'yellow' ) . "—"
-                            . colored( "$x", 'green' ) . "\n";
+                            . colored( $cw[$cc] . ")", 'bold blue' ) . " "
+                            . colored( "$x",           'grey12' ) . ' '
+                            . colored( $childs->{$x}->{title}, 'white' )
+                            . "\n";
+                        $cc++;
                     }
                 }
+                $formated .= " /\n";
             }
+            $pc++;
         }
-        # chomp($formated);
-        # chop($formated);
+
+        chomp($formated);
+        chop($formated);
         print $formated;
     }
     elsif ( $list =~ /^\d{10}$/ ) {
