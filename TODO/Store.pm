@@ -72,8 +72,8 @@ sub list {
         $childs = retrieve($child_file);
     }
 
-    print Dumper($parents);
-    print Dumper($childs);
+    # print Dumper($parents);
+    # print Dumper($childs);
 
     my $formated = '';
 
