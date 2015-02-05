@@ -12,7 +12,7 @@ my $usage = TODO::Usage->new();
 
 # Otions parsing
 sub init() {
-    my $opt_string = 'T:ndt:l:h';
+    my $opt_string = 'T:nd:t:l:h';
     getopts("$opt_string") or $usage->show();
     our ( $opt_T, $opt_t, $opt_n, $opt_d, $opt_l, $opt_h );
 
@@ -37,6 +37,12 @@ elsif ($opt_l) {
     # List tasks
     $store->list($opt_l);
 }
+elsif ($opt_d) {
+
+    # Delete tasks
+    $store->delete($opt_d);
+} 
 else {
     $usage->show();
 }
+

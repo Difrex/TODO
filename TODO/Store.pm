@@ -100,7 +100,7 @@ sub list {
                 . colored( $parents->{$unixt}->{title},
                 'bold white underscore' )
                 . "\n|\n";
-            if ( $parents->{$unixt}->{childs}[0] ) {
+            if ( $parents->{$unixt}->{childs} ) {
                 chomp($formated);
                 chop($formated);
                 my $cc = 0;
@@ -114,8 +114,7 @@ sub list {
                             . colored( $cw[$cc] . ")", 'bold blue' ) . " "
                             . colored( "$x",           'grey12' ) . ' '
                             . colored( $childs->{$x}->{title}, 'white' )
-                            . "\n";
-                        $cc++;
+                            . "\n" and $cc++ if $childs->{$x};
                     }
                 }
                 $formated .= " /\n";
@@ -125,6 +124,9 @@ sub list {
 
         chomp($formated);
         chop($formated);
+        chomp($formated);
+        chop($formated);
+
         print $formated;
     }
     elsif ( $list =~ /^\d{10}$/ ) {
@@ -176,6 +178,44 @@ sub new_subtask {
     store( \%c, $child_file );
 
     print colored( $task, 'cyan' ) . " stored.\n";
+}
+
+# Delete tasks
+sub delete {
+    my ( $self, $id ) = @_;
+    my $parents = retrieve( $self->{_parent} );
+    my $childs  = retrieve( $self->{_child} );
+
+    # Delete parent task with all subtasks
+    if ( $id =~ /^\d{10}$/ ) {
+        delete($parents->{$id});
+        store(\%$parents, $self->{_parent});
+        print colored("Task $id was removed\n", 'green');
+    }
+    elsif ( $id =~ /^.{8}$/ ) {
+        my $parent  = $childs->{$id}->{parent};
+        my $counter = 0;
+        foreach my $x ( $parents->{$parent}->{childs} ) {
+            foreach my $c (@$x) {
+                if ($id eq $c) {
+                    my @new_childs = @$x;
+                    delete($new_childs[$counter]);
+
+                    $parents->{$parent}->{childs} = [];
+                    delete($childs->{$id});
+
+                    push($parents->{$parent}->{childs}, @new_childs);
+
+                    store(\%$parents, $self->{_parent});
+                    store(\%$childs, $self->{_child});
+
+                    print colored("Subtask $id was removed\n", 'green');
+                    last;
+                }
+                $counter++;
+            }
+        }
+    }
 }
 
 # Generate random hash
